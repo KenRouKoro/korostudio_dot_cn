@@ -2,8 +2,10 @@
 
 import { profileConfig } from "../config";
 import { url } from "../utils/url-utils";
+import ImageWrapper from "./misc/ImageWrapper.astro";
 
 const currentYear = new Date().getFullYear();
+const config = profileConfig;
 ---
 
 <!--<div class="border-t border-[var(&#45;&#45;primary)] mx-16 border-dashed py-8 max-w-[var(&#45;&#45;page-width)] flex flex-col items-center justify-center px-6">-->
@@ -12,7 +14,7 @@ const currentYear = new Date().getFullYear();
 <div class="transition border-dashed border-[oklch(85%_0.01_var(--hue))] dark:border-white/15 mb-12 flex flex-col items-center justify-center px-6">
     <div class="transition text-50 text-sm text-center">
         <div>
-            <img src="/src/assets/images/icon.svg" alt="Logo" width="50" height="50" class="mx-auto mb-2 animate-spin-reverse" />
+            <ImageWrapper src={config.footerImage || ""} alt="Profile Image of the Author" class="w-[50px] h-[50px] mx-auto mb-2 animate-spin-reverse rounded-full"></ImageWrapper>
         </div>
         &copy; <span id="copyright-year">{currentYear}</span> {profileConfig.name}. All Rights Reserved. |
         <a class="transition link text-[var(--primary)] font-medium" target="_blank" href={url('rss.xml')}>RSS</a> |

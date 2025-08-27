@@ -1,3 +1,5 @@
+import I18nKey from "./i18n/i18nKey";
+import { i18n } from "./i18n/translation";
 import type {
 	ExpressiveCodeConfig,
 	LicenseConfig,
@@ -6,8 +8,6 @@ import type {
 	SiteConfig,
 } from "./types/config";
 import { LinkPreset } from "./types/config";
-import { i18n } from "./i18n/translation";
-import I18nKey from "./i18n/i18nKey";
 
 export const siteConfig: SiteConfig = {
 	title: i18n(I18nKey.siteTitle),
@@ -59,6 +59,7 @@ export const navBarConfig: NavBarConfig = {
 
 export const profileConfig: ProfileConfig = {
 	avatar: "assets/images/avatar.png", // Relative to the /src directory. Relative to the /public directory if it starts with '/'
+	footerImage: "assets/images/icon.svg", // Relative to the /src directory. Relative to the /public directory if it starts with '/'
 	name: "Koro（科洛）",
 	bio: "Wearing white gloves can't be done for a revolution.        — Владимир Ильич Ленин",
 	links: [
