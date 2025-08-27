@@ -4,17 +4,12 @@ export type SiteConfig = {
 	title: string;
 	subtitle: string;
 
-	lang:
-		| "en"
-		| "zh_CN"
-		| "zh_TW"
-		| "ja"
-		| "ko"
-		| "es"
-		| "th"
-		| "vi"
-		| "tr"
-		| "id";
+	lang: "en" | "zh_cn" | "ja" | "ru";
+
+	// 多语言配置
+	defaultLang?: string;
+	supportedLangs?: string[];
+	showLanguageSwitcher?: boolean;
 
 	themeColor: {
 		hue: number;
@@ -91,6 +86,11 @@ export type BlogPostData = {
 	draft?: boolean;
 	image?: string;
 	category?: string;
+	// 多语言字段
+	lang?: string;
+	translationKey?: string;
+	translations?: Record<string, string>;
+	// 导航字段
 	prevTitle?: string;
 	prevSlug?: string;
 	nextTitle?: string;

@@ -1,5 +1,5 @@
 import rss from "@astrojs/rss";
-import { getSortedPosts } from "@utils/content-utils";
+import { getSortedPostsByLanguage } from "@utils/content-utils";
 import { url } from "@utils/url-utils";
 import type { APIContext } from "astro";
 import MarkdownIt from "markdown-it";
@@ -17,7 +17,9 @@ function stripInvalidXmlChars(str: string): string {
 }
 
 export async function GET(context: APIContext) {
-	const blog = await getSortedPosts();
+	// 只获取默认语言的文章用于RSS feed
+	const defaultLang = siteConfig.defaultLang || siteConfig.lang || "zh_cn";
+	const blog = await getSortedPostsByLanguage(defaultLang);
 
 	return rss({
 		title: siteConfig.title,

@@ -3,12 +3,16 @@ import ArchivePanel from "@components/ArchivePanel.svelte";
 import I18nKey from "@i18n/i18nKey";
 import { i18n } from "@i18n/translation";
 import MainGridLayout from "@layouts/MainGridLayout.astro";
-import { getSortedPostsList } from "../utils/content-utils";
+import { getSortedPostsListByLanguage } from "../utils/content-utils";
+import { siteConfig } from "../config";
+import { extractLangFromUrl } from "../utils/i18n-utils";
 
-const sortedPostsList = await getSortedPostsList();
+// 从当前URL提取语言，如果没有则使用默认语言
+const currentLang = extractLangFromUrl(Astro.url.pathname);
+const sortedPostsList = await getSortedPostsListByLanguage(currentLang);
 ---
 
-<MainGridLayout title={i18n(I18nKey.archive)}>
-    <ArchivePanel sortedPosts={sortedPostsList} client:only="svelte"></ArchivePanel>
+<MainGridLayout title={i18n(I18nKey.archive, currentLang)} lang={currentLang}>
+    <ArchivePanel sortedPosts={sortedPostsList} lang={currentLang} client:only="svelte"></ArchivePanel>
 </MainGridLayout>
 

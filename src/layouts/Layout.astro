@@ -5,6 +5,8 @@ import "@fontsource/roboto/700.css";
 
 import ConfigCarrier from "@components/ConfigCarrier.astro";
 import { profileConfig, siteConfig } from "@/config";
+import { i18n } from "@/i18n/translation";
+import I18nKey from "@/i18n/i18nKey";
 import {
 	AUTO_MODE,
 	BANNER_HEIGHT,
@@ -47,11 +49,15 @@ banner = siteConfig.banner.src;
 
 const enableBanner = siteConfig.banner.enable;
 
+// 根据当前语言动态获取网站标题
+const currentLang = lang || siteConfig.lang;
+const dynamicSiteTitle = i18n(I18nKey.siteTitle, currentLang);
+
 let pageTitle: string;
 if (title) {
-	pageTitle = `${title} - ${siteConfig.title}`;
+	pageTitle = `${title} - ${dynamicSiteTitle}`;
 } else {
-	pageTitle = `${siteConfig.title} - ${siteConfig.subtitle}`;
+	pageTitle = `${dynamicSiteTitle} - ${siteConfig.subtitle}`;
 }
 
 const favicons: Favicon[] =
@@ -84,7 +90,7 @@ const bannerOffset =
 		<meta name="description" content={description || pageTitle}>
 		<meta name="author" content={profileConfig.name}>
 
-		<meta property="og:site_name" content={siteConfig.title}>
+		<meta property="og:site_name" content={dynamicSiteTitle}>
 		<meta property="og:url" content={Astro.url}>
 		<meta property="og:title" content={pageTitle}>
 		<meta property="og:description" content={description || pageTitle}>
@@ -350,6 +356,7 @@ function initCustomScrollbar() {
 		katexObserver.observe(element);
 	});
 }
+
 
 function showBanner() {
 	if (!siteConfig.banner.enable) return;

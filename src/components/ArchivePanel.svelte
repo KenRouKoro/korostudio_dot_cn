@@ -1,18 +1,9 @@
 <script lang="ts">
+import I18nKey from "@i18n/i18nKey";
+import { rt } from "@utils/reactive-i18n";
 import { onMount } from "svelte";
-
-import I18nKey from "../i18n/i18nKey";
-import { i18n } from "../i18n/translation";
+import { getPostUrl } from "../utils/i18n-utils";
 import { getPostUrlBySlug } from "../utils/url-utils";
-
-export let tags: string[];
-export let categories: string[];
-export let sortedPosts: Post[] = [];
-
-const params = new URLSearchParams(window.location.search);
-tags = params.has("tag") ? params.getAll("tag") : [];
-categories = params.has("category") ? params.getAll("category") : [];
-const uncategorized = params.get("uncategorized");
 
 interface Post {
 	slug: string;
@@ -22,6 +13,30 @@ interface Post {
 		category?: string;
 		published: Date;
 	};
+}
+
+// 使用响应式i18n函数
+$: postCountText = (count: number) =>
+	rt(count === 1 ? I18nKey.postCount : I18nKey.postsCount);
+
+export let tags: string[] = [];
+export let categories: string[] = [];
+export let sortedPosts: Post[] = [];
+export let lang = "zh_cn"; // 接收语言参数
+
+// 使用传入的语言参数
+let currentLang: string = lang;
+
+// Initialize with empty values for SSR
+let params: URLSearchParams;
+let uncategorized: string | null = null;
+
+// Only access window on client side
+if (typeof window !== "undefined") {
+	params = new URLSearchParams(window.location.search);
+	tags = params.has("tag") ? params.getAll("tag") : [];
+	categories = params.has("category") ? params.getAll("category") : [];
+	uncategorized = params.get("uncategorized");
 }
 
 interface Group {
@@ -85,7 +100,7 @@ onMount(async () => {
 });
 </script>
 
-<div class="card-base px-8 py-6">
+<div class="archive-panel card-base px-8 py-6">
     {#each groups as group}
         <div>
             <div class="flex flex-row w-full items-center h-[3.75rem]">
@@ -94,20 +109,20 @@ onMount(async () => {
                 </div>
                 <div class="w-[15%] md:w-[10%]">
                     <div
-                            class="h-3 w-3 bg-none rounded-full outline outline-[var(--primary)] mx-auto
+                            class="h-3 w-3 bg-none outline outline-[var(--primary)] mx-auto
                   -outline-offset-[2px] z-50 outline-3"
                     ></div>
                 </div>
                 <div class="w-[70%] md:w-[80%] transition text-left text-50">
-                    {group.posts.length} {i18n(group.posts.length === 1 ? I18nKey.postCount : I18nKey.postsCount)}
+                    {group.posts.length} {postCountText(group.posts.length)}
                 </div>
             </div>
 
             {#each group.posts as post}
                 <a
-                        href={getPostUrlBySlug(post.slug)}
+                        href={getPostUrl(post.slug, currentLang)}
                         aria-label={post.data.title}
-                        class="group btn-plain !block h-10 w-full rounded-lg hover:text-[initial]"
+                        class="group btn-plain !block h-10 w-full hover:text-[initial]"
                 >
                     <div class="flex flex-row justify-start items-center h-full">
                         <!-- date -->

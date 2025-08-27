@@ -1,9 +1,12 @@
-# About
-This is the demo site for [Fuwari](https://github.com/saicaca/fuwari).
+---
+lang: zh_cn
+translationKey: about
+---
 
-::github{repo="saicaca/fuwari"}
+# 关于
+这是科洛的个人博客，用于分享个人项目、技术文章。
 
-> ### Sources of images used in this site
-> - [Unsplash](https://unsplash.com/)
-> - [星と少女](https://www.pixiv.net/artworks/108916539) by [Stella](https://www.pixiv.net/users/93273965)
-> - [Rabbit - v1.4 Showcase](https://civitai.com/posts/586908) by [Rabbit_YourMajesty](https://civitai.com/user/Rabbit_YourMajesty)
+
+<div align="center"> <img height="137px" width="450px" style="width: 450px" src="https://github-readme-stats.vercel.app/api?username=KenRouKoro&hide_title=true&hide_border=true&show_icons=trueline_height=21&text_color=000&icon_color=000&bg_color=0,ea6161,ffc64d,fffc4d,52fa5a&theme=graywhite" /> 
+</div>
+<div align="center"> <img  style="width: 450px" src="https://github-readme-stats.vercel.app/api/top-langs/?username=KenRouKoro&hide_title=true&hide_border=true&layout=compact&langs_count=6&text_color=000&icon_color=fff&bg_color=0,52fa5a,4dfcff,c64dff&theme=graywhite" /> </div>

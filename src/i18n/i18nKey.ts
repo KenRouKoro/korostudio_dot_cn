@@ -4,6 +4,8 @@ enum I18nKey {
 	archive = "archive",
 	search = "search",
 
+	siteTitle = "siteTitle",
+
 	tags = "tags",
 	categories = "categories",
 	recentPosts = "recentPosts",

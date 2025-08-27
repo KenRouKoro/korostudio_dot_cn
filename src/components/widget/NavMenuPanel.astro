@@ -2,16 +2,32 @@
 import { Icon } from "astro-icon/components";
 import { type NavBarLink } from "../../types/config";
 import { url } from "../../utils/url-utils";
+import { getLanguageName, getLanguageSwitchUrl } from "@utils/i18n-utils";
+import { siteConfig } from "@/config";
 
 interface Props {
 	links: NavBarLink[];
 }
 
 const links = Astro.props.links;
+const currentPath = Astro.url.pathname;
+
+// 从URL中提取当前语言
+function getCurrentLanguage(path: string): string {
+	const match = path.match(/^\/([a-z]{2}(?:_[a-z]{2})?)\//i);
+	if (match && siteConfig.supportedLangs?.includes(match[1])) {
+		return match[1];
+	}
+	return siteConfig.defaultLang || "zh_cn";
+}
+
+const currentLang = getCurrentLanguage(currentPath);
+const supportedLangs = siteConfig.supportedLangs || ["zh_cn", "en"];
+const shouldShowLangSwitcher = siteConfig.showLanguageSwitcher && supportedLangs.length > 1;
 ---
 <div id="nav-menu-panel" class:list={["float-panel float-panel-closed absolute transition-all fixed right-4 px-2 py-2"]}>
     {links.map((link) => (
-        <a href={link.external ? link.url : url(link.url)} class="group flex justify-between items-center py-2 pl-3 pr-1 rounded-lg gap-8
+        <a href={link.external ? link.url : url(link.url)} class="group flex justify-between items-center py-2 pl-3 pr-1 gap-8
             hover:bg-[var(--btn-plain-bg-hover)] active:bg-[var(--btn-plain-bg-active)] transition
         "
            target={link.external ? "_blank" : null}
@@ -21,12 +37,38 @@ const links = Astro.props.links;
             </div>
             {!link.external && <Icon name="material-symbols:chevron-right-rounded"
                   class="transition text-[1.25rem] text-[var(--primary)]"
-            >
-            </Icon>}
+            />}
             {link.external && <Icon name="fa6-solid:arrow-up-right-from-square"
                   class="transition text-[0.75rem] text-black/25 dark:text-white/25 -translate-x-1"
-            >
-            </Icon>}
+            />}
         </a>
     ))}
+    
+    {shouldShowLangSwitcher && (
+        <div class="border-t border-[var(--line-divider)] mt-2 pt-2">
+            <div class="text-black/50 dark:text-white/50 text-sm font-medium px-3 py-1">
+                <Icon name="fa6-solid:language" class="inline mr-2" />
+                语言 / Language
+            </div>
+            {supportedLangs.map(lang => {
+                const isActive = lang === currentLang;
+                const url = getLanguageSwitchUrl(currentPath, lang);
+                return (
+                    <a href={url} class:list={[
+                        "group flex justify-between items-center py-2 pl-6 pr-1 gap-8",
+                        "hover:bg-[var(--btn-plain-bg-hover)] active:bg-[var(--btn-plain-bg-active)] transition",
+                        { "bg-[var(--btn-plain-bg-hover)]": isActive }
+                    ]}>
+                        <div class:list={[
+                            "transition font-medium",
+                            isActive ? "text-[var(--primary)]" : "text-black/60 dark:text-white/60 group-hover:text-[var(--primary)] group-active:text-[var(--primary)]"
+                        ]}>
+                            {getLanguageName(lang)}
+                        </div>
+                        {isActive && <Icon name="material-symbols:check" class="text-[1rem] text-[var(--primary)]" />}
+                    </a>
+                );
+            })}
+        </div>
+    )}
 </div>
