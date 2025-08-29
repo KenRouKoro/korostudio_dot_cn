@@ -48,8 +48,8 @@ const shouldShow = siteConfig.showLanguageSwitcher && supportedLangs.length > 1;
 			id="lang-trigger"
 		>
 			<Icon name="material-symbols:language" class="text-[1.25rem]" />
-			<span class="lang-text text-sm font-medium hidden md:inline">{getLanguageName(currentLang)}</span>
-			<Icon name="material-symbols:keyboard-arrow-down" class="text-[1rem] hidden md:inline" />
+			<span class="lang-text text-sm font-medium hidden sm:inline">{getLanguageName(currentLang)}</span>
+			<Icon name="material-symbols:keyboard-arrow-down" class="text-[1rem] hidden sm:inline" />
 		</button>
 		<div 
 			id="lang-dropdown" 
@@ -349,6 +349,18 @@ const shouldShow = siteConfig.showLanguageSwitcher && supportedLangs.length > 1;
 				return '/archive';
 			}
 			return `/${targetLang}/archive`;
+		} else if (currentUrl.includes('/about')) {
+			// 关于页面保持在关于页面
+			if (targetLang === 'zh_cn') {
+				return '/about';
+			}
+			return `/${targetLang}/about`;
+		} else if (currentUrl.includes('/archive')) {
+			// 归档页面保持在归档页面
+			if (targetLang === 'zh_cn') {
+				return '/archive';
+			}
+			return `/${targetLang}/archive`;
 		} else {
 			// 其他页面回退到首页
 			if (targetLang === 'zh_cn') {
@@ -379,23 +391,36 @@ const shouldShow = siteConfig.showLanguageSwitcher && supportedLangs.length > 1;
 				// 触发语言变化事件
 				window.dispatchEvent(new CustomEvent('languageChanged', { detail: { lang: selectedLang } }));
 				
-				// 检查目标URL是否存在
-				const urlExists = await checkUrlExists(href);
-				
 				// 先隐藏下拉面板
 				hidePanel();
+				
+				// 获取当前页面路径
+				const currentPath = window.location.pathname;
+				
+				// 动态生成目标URL，而不是使用预生成的href
+				let targetUrl = href;
+				
+				// 对于特殊页面，直接生成正确的目标URL
+				if (currentPath.includes('/about')) {
+					targetUrl = selectedLang === 'zh_cn' ? '/about' : `/${selectedLang}/about`;
+				} else if (currentPath.includes('/archive')) {
+					targetUrl = selectedLang === 'zh_cn' ? '/archive' : `/${selectedLang}/archive`;
+				}
+				
+				// 检查目标URL是否存在
+				const urlExists = await checkUrlExists(targetUrl);
 				
 				if (urlExists) {
 					// 目标页面存在，使用Swup导航避免页面重载
 					if (window.swup) {
-						window.swup.navigate(href);
+						window.swup.navigate(targetUrl);
 					} else {
 						// 降级方案：如果Swup不可用，使用传统跳转
-						window.location.replace(href);
+						window.location.replace(targetUrl);
 					}
 				} else {
 					// 目标页面不存在，使用回退URL
-					const fallbackUrl = getFallbackUrl(selectedLang, window.location.pathname);
+					const fallbackUrl = getFallbackUrl(selectedLang, currentPath);
 					if (window.swup) {
 						window.swup.navigate(fallbackUrl);
 					} else {

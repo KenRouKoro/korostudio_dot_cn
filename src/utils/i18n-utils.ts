@@ -244,6 +244,14 @@ export function getFallbackUrl(targetLang: string, currentUrl: string): string {
 		// 标签页面回退到归档页面
 		return getArchiveUrlWithLang(targetLang);
 	}
+	if (currentUrl.includes("/about")) {
+		// 关于页面保持在关于页面
+		return getAboutUrlWithLang(targetLang);
+	}
+	if (currentUrl.includes("/archive")) {
+		// 归档页面保持在归档页面
+		return getArchiveUrlWithLang(targetLang);
+	}
 	// 其他页面回退到首页
 	return getHomeUrlWithLang(targetLang);
 }

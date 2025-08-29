@@ -34,7 +34,15 @@ export const ru: Translation = {
 
 	[Key.more]: "Больше",
 
+	[Key.language]: "Язык",
+
 	[Key.author]: "Автор",
 	[Key.publishedAt]: "Опубликовано",
 	[Key.license]: "Лицензия",
+
+	[Key.notFound]: "404",
+	[Key.notFoundTitle]: "Страница не найдена",
+	[Key.notFoundDescription]: "Извините, страница, которую вы ищете, не существует или была перемещена.",
+	[Key.backToHome]: "Вернуться на главную",
+	[Key.currentPath]: "Путь",
 };

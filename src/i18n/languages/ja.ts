@@ -34,7 +34,15 @@ export const ja: Translation = {
 
 	[Key.more]: "もっと",
 
+	[Key.language]: "言語",
+
 	[Key.author]: "作者",
 	[Key.publishedAt]: "公開日",
 	[Key.license]: "ライセンス",
+
+	[Key.notFound]: "404",
+	[Key.notFoundTitle]: "ページが見つかりません",
+	[Key.notFoundDescription]: "申し訳ございませんが、お探しのページは存在しないか移動されました。",
+	[Key.backToHome]: "ホームに戻る",
+	[Key.currentPath]: "パス",
 };
