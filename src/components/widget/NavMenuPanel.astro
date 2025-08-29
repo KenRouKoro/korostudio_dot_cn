@@ -77,6 +77,143 @@ const shouldShowLangSwitcher =
 </div>
 
 <script>
+	// Cookie 工具函数
+	function setCookie(name: string, value: string, days: number = 365) {
+		const expires = new Date();
+		expires.setTime(expires.getTime() + (days * 24 * 60 * 60 * 1000));
+		document.cookie = `${name}=${value};expires=${expires.toUTCString()};path=/`;
+	}
+
+	function getCookie(name: string): string | null {
+		const nameEQ = name + "=";
+		const ca = document.cookie.split(';');
+		for (let i = 0; i < ca.length; i++) {
+			let c = ca[i];
+			while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+			if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
+		}
+		return null;
+	}
+
+	// 获取浏览器首选语言的函数
+	function getBrowserPreferredLanguage(): string {
+		const supportedLangs = ['zh_cn', 'en']; // NavMenuPanel中使用固定的支持语言列表
+		const browserLangs = navigator.languages || [navigator.language];
+		
+		for (const browserLang of browserLangs) {
+			const normalizedLang = browserLang.toLowerCase().replace('-', '_');
+			
+			// 繁体中文（港澳台）映射到简体中文
+			if (normalizedLang === 'zh_tw' || normalizedLang === 'zh_hk' || normalizedLang === 'zh_mo') {
+				return 'zh_cn';
+			}
+			
+			if (supportedLangs.includes(normalizedLang)) {
+				return normalizedLang;
+			}
+			// 尝试匹配语言的主要部分（如 en-US -> en）
+			const mainLang = normalizedLang.split('_')[0];
+			if (supportedLangs.includes(mainLang)) {
+				return mainLang;
+			}
+		}
+		
+		return 'en'; // 默认语言为英文
+	}
+
+	// 检查是否是有效的页面路径
+	function isValidPagePath(path: string): boolean {
+		// 移除语言前缀进行检查
+		const pathWithoutLang = path.replace(/^\/[a-z]{2}(?:_[a-z]{2})?(?:\/|$)/i, '/');
+		
+		// 定义有效的页面路径模式
+		const validPaths = [
+			'/', // 首页
+			'/about', // 关于页面
+			'/archive', // 归档页面
+			/^\/posts\/.+$/, // 文章页面
+			/^\/archive\/category\/.+$/, // 分类页面
+			/^\/archive\/tag\/.+$/, // 标签页面
+			/^\/\d+$/ // 分页页面
+		];
+		
+		// 检查路径是否匹配有效模式
+		return validPaths.some(pattern => {
+			if (typeof pattern === 'string') {
+				return pathWithoutLang === pattern;
+			} else {
+				return pattern.test(pathWithoutLang);
+			}
+		});
+	}
+	
+	// 检查语言偏好的函数
+	function checkLanguagePreference() {
+		const currentPath = window.location.pathname;
+		
+		// 如果是404页面或无效页面路径，不执行自动重定向
+		if (currentPath === '/404' || currentPath === '/404/' || !isValidPagePath(currentPath)) {
+			return;
+		}
+		
+		const savedLang = getCookie('preferred-language');
+		const currentLangMatch = currentPath.match(/^\/([a-z]{2}(?:_[a-z]{2})?)(?:\/|$)/i);
+		const currentLang = currentLangMatch ? currentLangMatch[1] : 'zh_cn'; // 默认语言
+		
+		let targetLang = savedLang;
+		
+		// 如果没有保存的语言偏好，检测浏览器语言
+		if (!savedLang) {
+			const browserLang = getBrowserPreferredLanguage();
+			// 只有当浏览器语言与当前语言不同时才重定向
+			if (browserLang !== currentLang) {
+				targetLang = browserLang;
+				// 保存浏览器检测到的语言偏好
+				setCookie('preferred-language', browserLang);
+			}
+		}
+		
+		// 如果有目标语言且与当前语言不同，则重定向
+		if (targetLang && targetLang !== currentLang) {
+			// 构建新的URL
+			let newPath;
+			if (targetLang === 'zh_cn') {
+				// 切换到默认语言，移除语言前缀
+				newPath = currentPath.replace(/^\/[a-z]{2}(?:_[a-z]{2})?(?:\/|$)/i, '/');
+				if (newPath === '/' && currentLangMatch && currentPath !== `/${currentLangMatch[1]}` && currentPath !== `/${currentLangMatch[1]}/`) {
+					newPath = currentPath.replace(/^\/[a-z]{2}(?:_[a-z]{2})?/i, '');
+				}
+			} else {
+				// 切换到其他语言
+				if (currentLangMatch) {
+					// 替换现有语言前缀
+					if (currentPath === `/${currentLangMatch[1]}` || currentPath === `/${currentLangMatch[1]}/`) {
+						// 如果是语言根路径，直接返回目标语言前缀，避免尾随斜杠
+						newPath = `/${targetLang}`;
+					} else {
+						// 替换语言前缀
+						newPath = currentPath.replace(/^\/[a-z]{2}(?:_[a-z]{2})?(?:\/|$)/i, `/${targetLang}/`);
+						if (newPath === `/${targetLang}/`) {
+							newPath = currentPath.replace(/^\/[a-z]{2}(?:_[a-z]{2})?/i, `/${targetLang}`);
+						}
+					}
+				} else {
+					// 添加语言前缀
+					if (currentPath === '/') {
+						// 如果是根路径，直接返回语言前缀，避免尾随斜杠
+						newPath = `/${targetLang}`;
+					} else {
+						newPath = `/${targetLang}${currentPath}`;
+					}
+				}
+			}
+			
+			// 使用replace保持路由记录
+			window.location.replace(newPath);
+			return;
+		}
+	}
+
 	// 更新导航菜单中语言文本的函数
 	function updateNavMenuLanguageText(lang: string) {
 		// 定义翻译映射
@@ -155,6 +292,7 @@ const shouldShowLangSwitcher =
 	
 	// 页面加载时更新状态
 	document.addEventListener('DOMContentLoaded', () => {
+		checkLanguagePreference();
 		updateNavMenuLanguageState();
 	});
 	
@@ -179,12 +317,6 @@ const shouldShowLangSwitcher =
 			
 			if (href && selectedLang) {
 				// 保存语言偏好到cookie
-				function setCookie(name: string, value: string, days: number = 365) {
-					const expires = new Date();
-					expires.setTime(expires.getTime() + (days * 24 * 60 * 60 * 1000));
-					document.cookie = `${name}=${value};expires=${expires.toUTCString()};path=/`;
-				}
-				
 				setCookie('preferred-language', selectedLang);
 				
 				// 触发语言变化事件

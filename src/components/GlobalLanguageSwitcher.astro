@@ -121,11 +121,29 @@ const shouldShow = siteConfig.showLanguageSwitcher && supportedLangs.length > 1;
 
 	// 获取浏览器首选语言的函数
 	function getBrowserPreferredLanguage(): string {
-		const supportedLangs = JSON.parse(document.getElementById('supported-langs-data')?.textContent || '["zh_cn", "en"]');
+		let supportedLangs: string[];
+		try {
+			const dataElement = document.getElementById('supported-langs-data');
+			const textContent = dataElement?.textContent?.trim();
+			if (textContent && textContent !== '') {
+				supportedLangs = JSON.parse(textContent);
+			} else {
+				supportedLangs = ['zh_cn', 'en'];
+			}
+		} catch (error) {
+			console.warn('Failed to parse supported languages data, using default:', error);
+			supportedLangs = ['zh_cn', 'en'];
+		}
 		const browserLangs = navigator.languages || [navigator.language];
 		
 		for (const browserLang of browserLangs) {
 			const normalizedLang = browserLang.toLowerCase().replace('-', '_');
+			
+			// 繁体中文（港澳台）映射到简体中文
+			if (normalizedLang === 'zh_tw' || normalizedLang === 'zh_hk' || normalizedLang === 'zh_mo') {
+				return 'zh_cn';
+			}
+			
 			if (supportedLangs.includes(normalizedLang)) {
 				return normalizedLang;
 			}
@@ -136,7 +154,7 @@ const shouldShow = siteConfig.showLanguageSwitcher && supportedLangs.length > 1;
 			}
 		}
 		
-		return 'zh_cn'; // 默认语言
+		return 'en'; // 默认语言改为英文
 	}
 
 	// 检查是否是有效的页面路径
