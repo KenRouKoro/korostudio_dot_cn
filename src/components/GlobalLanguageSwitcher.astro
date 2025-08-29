@@ -138,12 +138,12 @@ const shouldShow = siteConfig.showLanguageSwitcher && supportedLangs.length > 1;
 		// 定义有效的页面路径模式
 		const validPaths = [
 			'/', // 首页
-			'/about/', // 关于页面
-			'/archive/', // 归档页面
-			/^\/posts\/.+\/$/, // 文章页面
-			/^\/archive\/category\/.+\/$/, // 分类页面
-			/^\/archive\/tag\/.+\/$/, // 标签页面
-			/^\/\d+\/$/ // 分页页面
+			'/about', // 关于页面
+			'/archive', // 归档页面
+			/^\/posts\/.+$/, // 文章页面
+			/^\/archive\/category\/.+$/, // 分类页面
+			/^\/archive\/tag\/.+$/, // 标签页面
+			/^\/\d+$/ // 分页页面
 		];
 		
 		// 检查路径是否匹配有效模式
@@ -261,27 +261,27 @@ const shouldShow = siteConfig.showLanguageSwitcher && supportedLangs.length > 1;
 		if (currentUrl.includes('/posts/')) {
 			// 文章页面回退到归档页面
 			if (targetLang === 'zh_cn') {
-				return '/archive/';
+				return '/archive';
 			}
-			return `/${targetLang}/archive/`;
+			return `/${targetLang}/archive`;
 		} else if (currentUrl.includes('/archive/category/')) {
 			// 分类页面回退到归档页面
 			if (targetLang === 'zh_cn') {
-				return '/archive/';
+				return '/archive';
 			}
-			return `/${targetLang}/archive/`;
+			return `/${targetLang}/archive`;
 		} else if (currentUrl.includes('/archive/tag/')) {
 			// 标签页面回退到归档页面
 			if (targetLang === 'zh_cn') {
-				return '/archive/';
+				return '/archive';
 			}
-			return `/${targetLang}/archive/`;
+			return `/${targetLang}/archive`;
 		} else {
 			// 其他页面回退到首页
 			if (targetLang === 'zh_cn') {
 				return '/';
 			}
-			return `/${targetLang}/`;
+			return `/${targetLang}`;
 		}
 	}
 

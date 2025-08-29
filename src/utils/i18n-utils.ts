@@ -62,10 +62,10 @@ export function getPostUrl(slug: string, lang?: string): string {
 
 	// 根据语言参数生成URL
 	if (!lang || isDefaultLanguage(lang)) {
-		return `/posts/${cleanSlug}/`;
+		return `/posts/${cleanSlug}`;
 	}
 	
-	return `/${lang}/posts/${cleanSlug}/`;
+	return `/${lang}/posts/${cleanSlug}`;
 }
 
 /**
@@ -103,9 +103,9 @@ export function getTagUrlWithLang(tag: string, lang?: string): string {
  */
 export function getArchiveUrlWithLang(lang?: string): string {
 	if (!lang || isDefaultLanguage(lang)) {
-		return "/archive/";
+		return "/archive";
 	}
-	return `/${lang}/archive/`;
+	return `/${lang}/archive`;
 }
 
 /**
@@ -115,7 +115,7 @@ export function getHomeUrlWithLang(lang?: string): string {
 	if (!lang || isDefaultLanguage(lang)) {
 		return "/";
 	}
-	return `/${lang}/`;
+	return `/${lang}`;
 }
 
 /**
@@ -123,9 +123,9 @@ export function getHomeUrlWithLang(lang?: string): string {
  */
 export function getAboutUrlWithLang(lang?: string): string {
 	if (!lang || isDefaultLanguage(lang)) {
-		return "/about/";
+		return "/about";
 	}
-	return `/${lang}/about/`;
+	return `/${lang}/about`;
 }
 
 /**
@@ -164,7 +164,7 @@ export function getLanguageSwitchUrl(
 	}
 
 	// 检查是否是文章页面
-	const isPostPage = cleanUrl.match(/^\/posts\/(.+)\/$/);
+	const isPostPage = cleanUrl.match(/^\/posts\/(.+)$/);
 	if (isPostPage) {
 		// 对于文章页面，实现回退机制
 		return getPostLanguageSwitchUrl(cleanUrl, targetLang);
@@ -185,7 +185,7 @@ export function getPostLanguageSwitchUrl(
 	targetLang: string,
 ): string {
 	// 提取文章slug
-	const slugMatch = postUrl.match(/^\/posts\/(.+)\/$/);
+	const slugMatch = postUrl.match(/^\/posts\/(.+)$/);
 	if (!slugMatch) {
 		// 如果不是文章页面，回退到归档页面
 		return getArchiveUrlWithLang(targetLang);
