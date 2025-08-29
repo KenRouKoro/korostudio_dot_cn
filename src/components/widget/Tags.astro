@@ -30,3 +30,41 @@ const isCollapsed = tags.length >= 20;
         ))}
     </div>
 </WidgetLayout>
+
+<script>
+// 更新标签控件标题的函数
+function updateTagsTitle(lang: string) {
+    // 定义翻译映射
+    const translations = {
+        'zh_cn': '标签',
+        'en': 'Tags',
+        'ja': 'タグ',
+        'ru': 'Теги'
+    };
+    
+    const currentTranslation = translations[lang as keyof typeof translations] || translations['zh_cn'];
+    
+    // 更新标签控件的标题
+    const tagsWidget = document.querySelector('widget-layout[data-id="tags"]');
+    if (tagsWidget) {
+        const titleElement = tagsWidget.querySelector('div.font-bold');
+        if (titleElement) {
+            titleElement.textContent = currentTranslation;
+        }
+    }
+}
+
+// 监听语言变化事件
+function setupTagsLanguageListener() {
+    window.addEventListener('languageChanged', (event: any) => {
+        if (event.detail && event.detail.lang) {
+            updateTagsTitle(event.detail.lang);
+        }
+    });
+}
+
+// 页面加载时设置监听器
+document.addEventListener('DOMContentLoaded', () => {
+    setupTagsLanguageListener();
+});
+</script>

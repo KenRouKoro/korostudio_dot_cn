@@ -43,12 +43,26 @@ export function getPostUrl(slug: string, lang?: string): string {
 
 	// 通用的语言后缀清理逻辑
 	// 移除所有可能的语言后缀（支持的语言列表）
-	const supportedLangs = siteConfig.supportedLangs || ["en", "ja", "ko", "es", "th", "vi", "id", "tr", "zh_tw", "ru"];
+	const supportedLangs = siteConfig.supportedLangs || [
+		"en",
+		"ja",
+		"ko",
+		"es",
+		"th",
+		"vi",
+		"id",
+		"tr",
+		"zh_tw",
+		"ru",
+	];
 	for (const supportedLang of supportedLangs) {
 		// 移除形如 indexen, indexja, guideen, guideja 等语言后缀
-		cleanSlug = cleanSlug.replace(new RegExp(`(index|[^/]+)(${supportedLang})$`, "i"), "$1");
+		cleanSlug = cleanSlug.replace(
+			new RegExp(`(index|[^/]+)(${supportedLang})$`, "i"),
+			"$1",
+		);
 	}
-	
+
 	// 移除形如 indexru, guideen 等剩余的语言后缀（通用模式）
 	cleanSlug = cleanSlug.replace(/index[a-z]{2}$/i, "");
 	// 移除末尾的 /index
@@ -64,7 +78,7 @@ export function getPostUrl(slug: string, lang?: string): string {
 	if (!lang || isDefaultLanguage(lang)) {
 		return `/posts/${cleanSlug}`;
 	}
-	
+
 	return `/${lang}/posts/${cleanSlug}`;
 }
 
@@ -162,7 +176,11 @@ export function getLanguageSwitchUrl(
 	if (!isDefaultLanguage(currentLang)) {
 		cleanUrl = currentUrl.replace(new RegExp(`^\/${currentLang}(?:\/|$)`), "/");
 		// 如果结果是单独的斜杠且原URL不是根路径，需要保持原有路径结构
-		if (cleanUrl === "/" && currentUrl !== `/${currentLang}` && currentUrl !== `/${currentLang}/`) {
+		if (
+			cleanUrl === "/" &&
+			currentUrl !== `/${currentLang}` &&
+			currentUrl !== `/${currentLang}/`
+		) {
 			cleanUrl = currentUrl.replace(new RegExp(`^\/${currentLang}`), "");
 		}
 	}
@@ -177,6 +195,10 @@ export function getLanguageSwitchUrl(
 	// 添加目标语言前缀
 	if (isDefaultLanguage(targetLang)) {
 		return cleanUrl || "/";
+	}
+	// 如果cleanUrl是根路径，直接返回语言前缀，避免添加尾随斜杠
+	if (cleanUrl === "/") {
+		return `/${targetLang}`;
 	}
 	return `/${targetLang}${cleanUrl}`;
 }

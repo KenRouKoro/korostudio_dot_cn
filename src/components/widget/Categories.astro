@@ -36,3 +36,41 @@ const isCollapsed = categories.length >= COLLAPSE_THRESHOLD;
         </ButtonLink>
     )}
 </WidgetLayout>
+
+<script>
+// 更新分类控件标题的函数
+function updateCategoriesTitle(lang: string) {
+    // 定义翻译映射
+    const translations = {
+        'zh_cn': '分类',
+        'en': 'Categories',
+        'ja': 'カテゴリー',
+        'ru': 'Категории'
+    };
+    
+    const currentTranslation = translations[lang as keyof typeof translations] || translations['zh_cn'];
+    
+    // 更新分类控件的标题
+    const categoriesWidget = document.querySelector('widget-layout[data-id="categories"]');
+    if (categoriesWidget) {
+        const titleElement = categoriesWidget.querySelector('div.font-bold');
+        if (titleElement) {
+            titleElement.textContent = currentTranslation;
+        }
+    }
+}
+
+// 监听语言变化事件
+function setupCategoriesLanguageListener() {
+    window.addEventListener('languageChanged', (event: any) => {
+        if (event.detail && event.detail.lang) {
+            updateCategoriesTitle(event.detail.lang);
+        }
+    });
+}
+
+// 页面加载时设置监听器
+document.addEventListener('DOMContentLoaded', () => {
+    setupCategoriesLanguageListener();
+});
+</script>

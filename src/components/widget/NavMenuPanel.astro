@@ -1,9 +1,9 @@
 ---
+import { getLanguageName, getLanguageSwitchUrl } from "@utils/i18n-utils";
 import { Icon } from "astro-icon/components";
+import { siteConfig } from "@/config";
 import { type NavBarLink } from "../../types/config";
 import { url } from "../../utils/url-utils";
-import { getLanguageName, getLanguageSwitchUrl } from "@utils/i18n-utils";
-import { siteConfig } from "@/config";
 
 interface Props {
 	links: NavBarLink[];
@@ -14,7 +14,7 @@ const currentPath = Astro.url.pathname;
 
 // 从URL中提取当前语言
 function getCurrentLanguage(path: string): string {
-	const match = path.match(/^\/([a-z]{2}(?:_[a-z]{2})?)\//i);
+	const match = path.match(/^\/([a-z]{2}(?:_[a-z]{2})?)(?:\/|$)/i);
 	if (match && siteConfig.supportedLangs?.includes(match[1])) {
 		return match[1];
 	}
@@ -23,7 +23,8 @@ function getCurrentLanguage(path: string): string {
 
 const currentLang = getCurrentLanguage(currentPath);
 const supportedLangs = siteConfig.supportedLangs || ["zh_cn", "en"];
-const shouldShowLangSwitcher = siteConfig.showLanguageSwitcher && supportedLangs.length > 1;
+const shouldShowLangSwitcher =
+	siteConfig.showLanguageSwitcher && supportedLangs.length > 1;
 ---
 <div id="nav-menu-panel" class:list={["float-panel float-panel-closed absolute transition-all fixed right-4 px-2 py-2"]}>
     {links.map((link) => (
@@ -58,7 +59,7 @@ const shouldShowLangSwitcher = siteConfig.showLanguageSwitcher && supportedLangs
                         "group flex justify-between items-center py-2 pl-6 pr-1 gap-8",
                         "hover:bg-[var(--btn-plain-bg-hover)] active:bg-[var(--btn-plain-bg-active)] transition",
                         { "bg-[var(--btn-plain-bg-hover)]": isActive }
-                    ]}>
+                    ]} data-lang-switch={lang}>
                         <div class:list={[
                             "transition font-medium",
                             isActive ? "text-[var(--primary)]" : "text-black/60 dark:text-white/60 group-hover:text-[var(--primary)] group-active:text-[var(--primary)]"
@@ -72,3 +73,74 @@ const shouldShowLangSwitcher = siteConfig.showLanguageSwitcher && supportedLangs
         </div>
     )}
 </div>
+
+<script>
+	// 处理移动端菜单的语言切换
+	document.addEventListener('click', async (e) => {
+		const target = e.target as HTMLElement;
+		const langLink = target.closest('a[data-lang-switch]') as HTMLAnchorElement;
+		
+		if (langLink) {
+			e.preventDefault();
+			
+			const href = langLink.getAttribute('href');
+			const selectedLang = langLink.getAttribute('data-lang-switch');
+			
+			if (href && selectedLang) {
+				// 保存语言偏好到cookie
+				function setCookie(name: string, value: string, days: number = 365) {
+					const expires = new Date();
+					expires.setTime(expires.getTime() + (days * 24 * 60 * 60 * 1000));
+					document.cookie = `${name}=${value};expires=${expires.toUTCString()};path=/`;
+				}
+				
+				setCookie('preferred-language', selectedLang);
+				
+				// 触发语言变化事件
+				window.dispatchEvent(new CustomEvent('languageChanged', { detail: { lang: selectedLang } }));
+				
+				// 检查目标URL是否存在
+				async function checkUrlExists(url: string): Promise<boolean> {
+					try {
+						const response = await fetch(url, { method: 'HEAD' });
+						return response.ok;
+					} catch {
+						return false;
+					}
+				}
+				
+				// 获取回退URL的函数
+				function getFallbackUrl(targetLang: string, currentUrl: string): string {
+					if (currentUrl.includes('/posts/')) {
+						return targetLang === 'zh_cn' ? '/archive' : `/${targetLang}/archive`;
+					} else if (currentUrl.includes('/archive/category/') || currentUrl.includes('/archive/tag/')) {
+						return targetLang === 'zh_cn' ? '/archive' : `/${targetLang}/archive`;
+					} else {
+						return targetLang === 'zh_cn' ? '/' : `/${targetLang}`;
+					}
+				}
+				
+				const urlExists = await checkUrlExists(href);
+				
+				if (urlExists) {
+					// 目标页面存在，使用Swup导航避免页面重载
+					if (window.swup) {
+						window.swup.navigate(href);
+					} else {
+						// 降级方案：如果Swup不可用，使用传统跳转
+						window.location.replace(href);
+					}
+				} else {
+					// 目标页面不存在，使用回退URL
+					const fallbackUrl = getFallbackUrl(selectedLang, window.location.pathname);
+					if (window.swup) {
+						window.swup.navigate(fallbackUrl);
+					} else {
+						// 降级方案：如果Swup不可用，使用传统跳转
+						window.location.replace(fallbackUrl);
+					}
+				}
+			}
+		}
+	});
+</script>

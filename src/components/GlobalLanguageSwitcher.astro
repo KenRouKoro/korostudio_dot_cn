@@ -1,10 +1,17 @@
 ---
+import {
+	getFallbackUrl,
+	getLanguageName,
+	getLanguageSwitchUrl,
+	isDefaultLanguage,
+} from "@utils/i18n-utils";
 import { Icon } from "astro-icon/components";
-import { getLanguageName, isDefaultLanguage, getLanguageSwitchUrl, getFallbackUrl } from "@utils/i18n-utils";
 import { siteConfig } from "@/config";
 
 // 将支持的语言列表传递给客户端脚本
-const supportedLangsJson = JSON.stringify(siteConfig.supportedLangs || ["zh_cn", "en"]);
+const supportedLangsJson = JSON.stringify(
+	siteConfig.supportedLangs || ["zh_cn", "en"],
+);
 
 interface Props {
 	currentUrl?: string;
@@ -37,10 +44,12 @@ const shouldShow = siteConfig.showLanguageSwitcher && supportedLangs.length > 1;
 		<button 
 			aria-label="Language Switcher" 
 			role="menuitem" 
-			class="btn-plain scale-animation h-11 w-11 active:scale-90" 
+			class="btn-plain scale-animation h-11 px-3 active:scale-90 flex items-center gap-1" 
 			id="lang-trigger"
 		>
 			<Icon name="material-symbols:language" class="text-[1.25rem]" />
+			<span class="lang-text text-sm font-medium hidden md:inline">{getLanguageName(currentLang)}</span>
+			<Icon name="material-symbols:keyboard-arrow-down" class="text-[1rem] hidden md:inline" />
 		</button>
 		<div 
 			id="lang-dropdown" 
@@ -196,25 +205,78 @@ const shouldShow = siteConfig.showLanguageSwitcher && supportedLangs.length > 1;
 				// 切换到其他语言
 				if (currentLangMatch) {
 					// 替换现有语言前缀
-					newPath = currentPath.replace(/^\/[a-z]{2}(?:_[a-z]{2})?(?:\/|$)/i, `/${targetLang}/`);
-					if (newPath === `/${targetLang}/` && currentLangMatch && currentPath !== `/${currentLangMatch[1]}` && currentPath !== `/${currentLangMatch[1]}/`) {
-						newPath = currentPath.replace(/^\/[a-z]{2}(?:_[a-z]{2})?/i, `/${targetLang}`);
+					if (currentPath === `/${currentLangMatch[1]}` || currentPath === `/${currentLangMatch[1]}/`) {
+						// 如果是语言根路径，直接返回目标语言前缀，避免尾随斜杠
+						newPath = `/${targetLang}`;
+					} else {
+						// 替换语言前缀
+						newPath = currentPath.replace(/^\/[a-z]{2}(?:_[a-z]{2})?(?:\/|$)/i, `/${targetLang}/`);
+						if (newPath === `/${targetLang}/`) {
+							newPath = currentPath.replace(/^\/[a-z]{2}(?:_[a-z]{2})?/i, `/${targetLang}`);
+						}
 					}
 				} else {
 					// 添加语言前缀
-					newPath = `/${targetLang}${currentPath}`;
+					if (currentPath === '/') {
+						// 如果是根路径，直接返回语言前缀，避免尾随斜杠
+						newPath = `/${targetLang}`;
+					} else {
+						newPath = `/${targetLang}${currentPath}`;
+					}
 				}
 			}
 			
-			// 直接跳转并刷新页面
-			window.location.href = newPath;
+			// 使用replace保持路由记录
+			window.location.replace(newPath);
 			return;
 		}
 	}
 
+	// 更新下拉框显示状态的函数
+	function updateDropdownState() {
+		const currentPath = window.location.pathname;
+		const currentLangMatch = currentPath.match(/^\/([a-z]{2}(?:_[a-z]{2})?)(?:\/|$)/i);
+		const currentLang = currentLangMatch ? currentLangMatch[1] : 'zh_cn';
+		
+		// 更新触发按钮显示的语言
+		const langTrigger = document.getElementById('lang-trigger');
+		if (langTrigger) {
+			const langText = langTrigger.querySelector('.lang-text');
+			if (langText) {
+				// 根据当前语言更新显示文本
+				const langNames: { [key: string]: string } = {
+					'zh_cn': '中文',
+					'en': 'English',
+					'ja': '日本語',
+					'ru': 'Русский'
+				};
+				langText.textContent = langNames[currentLang] || '中文';
+			}
+		}
+		
+		// 更新下拉选项的激活状态
+		const langOptions = document.querySelectorAll('#lang-dropdown a');
+		langOptions.forEach(option => {
+			const optionLang = option.getAttribute('href')?.match(/^\/([a-z]{2}(?:_[a-z]{2})?)(?:\/|$)/i)?.[1] || 'zh_cn';
+			if (optionLang === 'zh_cn' && option.getAttribute('href') === '/') {
+				// 处理默认语言的根路径情况
+				if (currentLang === 'zh_cn') {
+					option.classList.add('active-lang');
+				} else {
+					option.classList.remove('active-lang');
+				}
+			} else if (optionLang === currentLang) {
+				option.classList.add('active-lang');
+			} else {
+				option.classList.remove('active-lang');
+			}
+		});
+	}
+	
 	// 页面加载时检查语言偏好并设置事件监听器
 	document.addEventListener('DOMContentLoaded', () => {
 		checkLanguagePreference();
+		updateDropdownState();
 		
 		const langTrigger = document.getElementById('lang-trigger');
 		const langSwitcher = document.getElementById('global-language-switcher');
@@ -249,6 +311,11 @@ const shouldShow = siteConfig.showLanguageSwitcher && supportedLangs.length > 1;
 				langSwitcher.addEventListener('mouseleave', hidePanel);
 			}
 		}
+	});
+	
+	// 监听语言变化事件，更新UI状态
+	window.addEventListener('languageChanged', () => {
+		updateDropdownState();
 	});
 	
 	// 检查URL是否存在的函数
@@ -315,16 +382,37 @@ const shouldShow = siteConfig.showLanguageSwitcher && supportedLangs.length > 1;
 				// 检查目标URL是否存在
 				const urlExists = await checkUrlExists(href);
 				
+				// 先隐藏下拉面板
+				hidePanel();
+				
 				if (urlExists) {
-					// 目标页面存在，直接跳转并刷新页面
-					window.location.href = href;
+					// 目标页面存在，使用Swup导航避免页面重载
+					if (window.swup) {
+						window.swup.navigate(href);
+					} else {
+						// 降级方案：如果Swup不可用，使用传统跳转
+						window.location.replace(href);
+					}
 				} else {
-					// 目标页面不存在，使用回退URL并刷新页面
+					// 目标页面不存在，使用回退URL
 					const fallbackUrl = getFallbackUrl(selectedLang, window.location.pathname);
-					window.location.href = fallbackUrl;
+					if (window.swup) {
+						window.swup.navigate(fallbackUrl);
+					} else {
+						// 降级方案：如果Swup不可用，使用传统跳转
+						window.location.replace(fallbackUrl);
+					}
 				}
 			}
 			return;
 		}
 	});
 </script>
+
+<style>
+	.active-lang {
+		color: var(--primary) !important;
+		font-weight: 500 !important;
+		background-color: var(--btn-plain-bg-hover) !important;
+	}
+</style>
