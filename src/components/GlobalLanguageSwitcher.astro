@@ -130,10 +130,42 @@ const shouldShow = siteConfig.showLanguageSwitcher && supportedLangs.length > 1;
 		return 'zh_cn'; // 默认语言
 	}
 
+	// 检查是否是有效的页面路径
+	function isValidPagePath(path: string): boolean {
+		// 移除语言前缀进行检查
+		const pathWithoutLang = path.replace(/^\/[a-z]{2}(?:_[a-z]{2})?\//i, '/');
+		
+		// 定义有效的页面路径模式
+		const validPaths = [
+			'/', // 首页
+			'/about/', // 关于页面
+			'/archive/', // 归档页面
+			/^\/posts\/.+\/$/, // 文章页面
+			/^\/archive\/category\/.+\/$/, // 分类页面
+			/^\/archive\/tag\/.+\/$/, // 标签页面
+			/^\/\d+\/$/ // 分页页面
+		];
+		
+		// 检查路径是否匹配有效模式
+		return validPaths.some(pattern => {
+			if (typeof pattern === 'string') {
+				return pathWithoutLang === pattern;
+			} else {
+				return pattern.test(pathWithoutLang);
+			}
+		});
+	}
+	
 	// 检查语言偏好的函数
 	function checkLanguagePreference() {
-		const savedLang = getCookie('preferred-language');
 		const currentPath = window.location.pathname;
+		
+		// 如果是404页面或无效页面路径，不执行自动重定向
+		if (currentPath === '/404' || currentPath === '/404/' || !isValidPagePath(currentPath)) {
+			return;
+		}
+		
+		const savedLang = getCookie('preferred-language');
 		const currentLangMatch = currentPath.match(/^\/([a-z]{2}(?:_[a-z]{2})?)\//i);
 		const currentLang = currentLangMatch ? currentLangMatch[1] : 'zh_cn'; // 默认语言
 		

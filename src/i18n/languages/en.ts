@@ -37,4 +37,11 @@ export const en: Translation = {
 	[Key.author]: "Author",
 	[Key.publishedAt]: "Published at",
 	[Key.license]: "License",
+
+	[Key.notFound]: "404",
+	[Key.notFoundTitle]: "Page Not Found",
+	[Key.notFoundDescription]:
+		"Sorry, the page you are looking for does not exist or has been moved.",
+	[Key.backToHome]: "Back to Home",
+	[Key.currentPath]: "Path",
 };

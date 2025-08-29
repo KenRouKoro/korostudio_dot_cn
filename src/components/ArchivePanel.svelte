@@ -1,6 +1,6 @@
 <script lang="ts">
 import I18nKey from "@i18n/i18nKey";
-import { rt } from "@utils/reactive-i18n";
+import { i18n } from "@i18n/translation";
 import { onMount } from "svelte";
 import { getPostUrl } from "../utils/i18n-utils";
 import { getPostUrlBySlug } from "../utils/url-utils";
@@ -15,9 +15,9 @@ interface Post {
 	};
 }
 
-// 使用响应式i18n函数
+// 使用i18n函数获取文章数量文本
 $: postCountText = (count: number) =>
-	rt(count === 1 ? I18nKey.postCount : I18nKey.postsCount);
+	i18n(count === 1 ? I18nKey.postCount : I18nKey.postsCount, currentLang);
 
 export let tags: string[] = [];
 export let categories: string[] = [];

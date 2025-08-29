@@ -8,7 +8,7 @@
         @apply transition;
     }
     
-    a:not(.custom-md a):not(#navbar a):not(#sidebar a):not(.archive-panel a):not(.post-card a) {
+    a:not(.custom-md a):not(#navbar a):not(#sidebar a):not(.archive-panel a):not(.post-card a):not(.notfound-page a) {
         @apply relative;
         
         &::after {
