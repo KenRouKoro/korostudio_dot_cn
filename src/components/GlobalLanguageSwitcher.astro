@@ -15,7 +15,7 @@ const currentPath = currentUrl || Astro.url.pathname;
 
 // 从URL中提取当前语言
 function getCurrentLanguage(path: string): string {
-	const match = path.match(/^\/([a-z]{2}(?:_[a-z]{2})?)\//i);
+	const match = path.match(/^\/([a-z]{2}(?:_[a-z]{2})?)(?:\/|$)/i);
 	if (match && siteConfig.supportedLangs?.includes(match[1])) {
 		return match[1];
 	}
@@ -133,7 +133,7 @@ const shouldShow = siteConfig.showLanguageSwitcher && supportedLangs.length > 1;
 	// 检查是否是有效的页面路径
 	function isValidPagePath(path: string): boolean {
 		// 移除语言前缀进行检查
-		const pathWithoutLang = path.replace(/^\/[a-z]{2}(?:_[a-z]{2})?\//i, '/');
+		const pathWithoutLang = path.replace(/^\/[a-z]{2}(?:_[a-z]{2})?(?:\/|$)/i, '/');
 		
 		// 定义有效的页面路径模式
 		const validPaths = [
@@ -166,7 +166,7 @@ const shouldShow = siteConfig.showLanguageSwitcher && supportedLangs.length > 1;
 		}
 		
 		const savedLang = getCookie('preferred-language');
-		const currentLangMatch = currentPath.match(/^\/([a-z]{2}(?:_[a-z]{2})?)\//i);
+		const currentLangMatch = currentPath.match(/^\/([a-z]{2}(?:_[a-z]{2})?)(?:\/|$)/i);
 		const currentLang = currentLangMatch ? currentLangMatch[1] : 'zh_cn'; // 默认语言
 		
 		let targetLang = savedLang;
@@ -188,12 +188,18 @@ const shouldShow = siteConfig.showLanguageSwitcher && supportedLangs.length > 1;
 			let newPath;
 			if (targetLang === 'zh_cn') {
 				// 切换到默认语言，移除语言前缀
-				newPath = currentPath.replace(/^\/[a-z]{2}(?:_[a-z]{2})?\//i, '/');
+				newPath = currentPath.replace(/^\/[a-z]{2}(?:_[a-z]{2})?(?:\/|$)/i, '/');
+				if (newPath === '/' && currentLangMatch && currentPath !== `/${currentLangMatch[1]}` && currentPath !== `/${currentLangMatch[1]}/`) {
+					newPath = currentPath.replace(/^\/[a-z]{2}(?:_[a-z]{2})?/i, '');
+				}
 			} else {
 				// 切换到其他语言
 				if (currentLangMatch) {
 					// 替换现有语言前缀
-					newPath = currentPath.replace(/^\/[a-z]{2}(?:_[a-z]{2})?\//i, `/${targetLang}/`);
+					newPath = currentPath.replace(/^\/[a-z]{2}(?:_[a-z]{2})?(?:\/|$)/i, `/${targetLang}/`);
+					if (newPath === `/${targetLang}/` && currentLangMatch && currentPath !== `/${currentLangMatch[1]}` && currentPath !== `/${currentLangMatch[1]}/`) {
+						newPath = currentPath.replace(/^\/[a-z]{2}(?:_[a-z]{2})?/i, `/${targetLang}`);
+					}
 				} else {
 					// 添加语言前缀
 					newPath = `/${targetLang}${currentPath}`;
@@ -297,7 +303,7 @@ const shouldShow = siteConfig.showLanguageSwitcher && supportedLangs.length > 1;
 			const href = target.getAttribute('href');
 			if (href) {
 				// 从URL中提取语言
-				const langMatch = href.match(/^\/([a-z]{2}(?:_[a-z]{2})?)\//i);
+				const langMatch = href.match(/^\/([a-z]{2}(?:_[a-z]{2})?)(?:\/|$)/i);
 				const selectedLang = langMatch ? langMatch[1] : 'zh_cn';
 				
 				// 保存语言偏好到cookie

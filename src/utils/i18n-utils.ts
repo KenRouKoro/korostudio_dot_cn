@@ -132,7 +132,7 @@ export function getAboutUrlWithLang(lang?: string): string {
  * 从URL路径中提取语言代码
  */
 export function extractLangFromUrl(url: string): string {
-	const match = url.match(/^\/([a-z]{2}(?:_[a-z]{2})?)\//i);
+	const match = url.match(/^\/([a-z]{2}(?:_[a-z]{2})?)(?:\/|$)/i);
 	if (match && siteConfig.supportedLangs?.includes(match[1])) {
 		return match[1];
 	}
@@ -160,7 +160,11 @@ export function getLanguageSwitchUrl(
 	// 移除当前语言前缀
 	let cleanUrl = currentUrl;
 	if (!isDefaultLanguage(currentLang)) {
-		cleanUrl = currentUrl.replace(new RegExp(`^\/${currentLang}`), "");
+		cleanUrl = currentUrl.replace(new RegExp(`^\/${currentLang}(?:\/|$)`), "/");
+		// 如果结果是单独的斜杠且原URL不是根路径，需要保持原有路径结构
+		if (cleanUrl === "/" && currentUrl !== `/${currentLang}` && currentUrl !== `/${currentLang}/`) {
+			cleanUrl = currentUrl.replace(new RegExp(`^\/${currentLang}`), "");
+		}
 	}
 
 	// 检查是否是文章页面
