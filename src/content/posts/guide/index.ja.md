@@ -4,7 +4,7 @@ published: 2024-04-01
 description: このブログテンプレートの使用方法。
 image: "./cover.jpeg"
 tags: ["Fuwari"]
-category: Guides
+category: ガイド
 draft: false
 lang: "ja"
 ---
@@ -60,11 +60,13 @@ src/content/posts/
 ```
 
 ## 言語切り替え
+
 トップヘッダーでグローバルに言語を切り替えると、自動的にフィルタリングされます。
 
 ## 対応言語
 
 このブログテンプレートは以下の言語に対応しています：
+
 - 簡体中国語: `zh_cn`
 - 英語: `en`
 - 日本語: `ja`

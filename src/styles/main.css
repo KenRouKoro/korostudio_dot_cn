@@ -8,7 +8,7 @@
         @apply transition;
     }
     
-    a:not(.custom-md a):not(#navbar a):not(#sidebar a):not(.archive-panel a):not(.post-card a):not(.notfound-page a) {
+    a:not(.custom-md a):not(#navbar a):not(#sidebar a):not(.archive-panel a):not(.post-card a):not(.notfound-page a):not(#toc a) {
         @apply relative;
         
         &::after {
@@ -30,6 +30,13 @@
             &::after {
                 transform: scaleX(1);
             }
+        }
+    }
+
+    /* 左侧按钮的hover动画从右侧开始 */
+    a.nav-btn-left:not(.custom-md a):not(#navbar a):not(#sidebar a):not(.archive-panel a):not(.post-card a):not(.notfound-page a):not(#toc a) {
+        &::after {
+            transform-origin: right;
         }
     }
     .card-shadow {
