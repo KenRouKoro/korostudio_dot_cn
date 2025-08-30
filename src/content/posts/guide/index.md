@@ -47,7 +47,7 @@ lang: "zh_cn"
 
 对于多语言文章，请使用以下命名约定：
 
-```
+``` text
 src/content/posts/
 ├── guide/
 │   ├── cover.jpeg
@@ -60,13 +60,14 @@ src/content/posts/
 ```
 
 ## 语言切换
+
 在顶部Header中全局切换语言，会自动筛选。
 
 ## 支持的语言
 
 此博客模板支持以下语言：
+
 - 简体中文：`zh_cn`
 - 英语：`en`
 - 日语：`ja`
 - 俄文：`ru`
-
