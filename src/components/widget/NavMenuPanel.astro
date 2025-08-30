@@ -1,11 +1,22 @@
 ---
-import { getLanguageName, getLanguageSwitchUrl } from "@utils/i18n-utils";
+import I18nKey from "@i18n/i18nKey";
+import { i18n } from "@i18n/translation";
+import {
+	getDynamicLanguageSwitchUrl,
+	getLanguageName,
+	getLanguageSwitchUrl,
+	getPostsSameLangTextUrl,
+	getUniversalLanguageSwitchUrl,
+	isAboutPath,
+	isArchivePath,
+	isHomePath,
+	isPostsPath,
+	switchLanguageWithFallback,
+} from "@utils/i18n-utils";
 import { Icon } from "astro-icon/components";
 import { siteConfig } from "@/config";
 import { type NavBarLink } from "../../types/config";
 import { url } from "../../utils/url-utils";
-import { i18n } from "@i18n/translation";
-import I18nKey from "@i18n/i18nKey";
 
 interface Props {
 	links: NavBarLink[];
@@ -55,9 +66,8 @@ const shouldShowLangSwitcher =
             </div>
             {supportedLangs.map(lang => {
                 const isActive = lang === currentLang;
-                const url = getLanguageSwitchUrl(currentPath, lang);
                 return (
-                    <a href={url} class:list={[
+                    <a href="#" class:list={[
                         "group flex justify-between items-center py-2 pl-6 pr-1 gap-8",
                         "hover:bg-[var(--btn-plain-bg-hover)] active:bg-[var(--btn-plain-bg-active)] transition",
                         { "bg-[var(--btn-plain-bg-hover)]": isActive }
@@ -77,6 +87,190 @@ const shouldShowLangSwitcher =
 </div>
 
 <script>
+	// 导入需要的函数（客户端版本）
+	import { getDynamicLanguageSwitchUrl, switchLanguageWithFallback } from "@utils/i18n-utils";
+
+	// Posts路径检测和同语言跳转函数
+	function isPostsPath(url: string): boolean {
+		// 使用正则表达式匹配包含posts的路径
+		// 匹配 /posts/... 或 /lang/posts/... 格式
+		const postsPathRegex = /^\/(\w+\/)?posts\//;
+		return postsPathRegex.test(url);
+	}
+
+	function extractLangFromUrl(url: string): string {
+		const supportedLangs = ['zh_cn', 'en', 'ja', 'ko', 'es', 'th', 'vi', 'id', 'tr', 'zh_tw', 'ru'];
+		const match = url.match(/^\/([a-z]{2}(?:_[a-z]{2})?)(?:\/|$)/i);
+		if (match && supportedLangs.includes(match[1])) {
+			return match[1];
+		}
+		return 'zh_cn'; // 默认语言
+	}
+
+	function isDefaultLanguage(lang: string): boolean {
+		return lang === 'zh_cn';
+	}
+
+	function getPostUrl(slug: string, lang?: string): string {
+		// 清理slug，移除文件扩展名和语言后缀
+		let cleanSlug = slug;
+		// 移除 .md, .en.md 等扩展名
+		cleanSlug = cleanSlug.replace(/\.(\w+\.)?md$/, "");
+		// 移除 index.en, index.zh_cn 等文件名
+		cleanSlug = cleanSlug.replace(/\/index(\.\w+)?$/, "");
+
+		// 通用的语言后缀清理逻辑
+		const supportedLangs = ['en', 'ja', 'ko', 'es', 'th', 'vi', 'id', 'tr', 'zh_tw', 'ru'];
+		for (const supportedLang of supportedLangs) {
+			// 移除形如 indexen, indexja, guideen, guideja 等语言后缀
+			cleanSlug = cleanSlug.replace(
+				new RegExp(`(index|[^/]+)(${supportedLang})$`, "i"),
+				"$1",
+			);
+		}
+
+		// 移除形如 indexru, guideen 等剩余的语言后缀（通用模式）
+		cleanSlug = cleanSlug.replace(/index[a-z]{2}$/i, "");
+		// 移除末尾的 /index
+		cleanSlug = cleanSlug.replace(/\/index$/, "");
+		// 如果整个 slug 就是 index，则设为空字符串
+		if (cleanSlug === "index") {
+			cleanSlug = "";
+		}
+		// 移除开头和结尾的斜杠
+		cleanSlug = cleanSlug.replace(/^\/+|\/+$/g, "");
+
+		// 根据语言参数生成URL
+		if (!lang || isDefaultLanguage(lang)) {
+			return `/posts/${cleanSlug}`;
+		}
+
+		return `/${lang}/posts/${cleanSlug}`;
+	}
+
+	function getPostsSameLangTextUrl(currentUrl: string, targetLang: string): string {
+		// 提取当前语言和文章slug
+		const currentLang = extractLangFromUrl(currentUrl);
+		
+		// 移除当前语言前缀，获取纯净的路径
+		let cleanUrl = currentUrl;
+		if (!isDefaultLanguage(currentLang)) {
+			cleanUrl = currentUrl.replace(new RegExp(`^\/${currentLang}(?:\/|$)`), "/");
+		}
+		
+		// 确保是posts路径
+		if (!isPostsPath(cleanUrl)) {
+			// 如果不是posts路径，回退到原有逻辑
+			return cleanUrl;
+		}
+		
+		// 提取文章slug
+		const slugMatch = cleanUrl.match(/^\/posts\/(.+)$/);
+		if (!slugMatch) {
+			// 如果无法提取slug，回退到归档页面
+			return targetLang === 'zh_cn' ? '/archive' : `/${targetLang}/archive`;
+		}
+		
+		const slug = slugMatch[1];
+		
+		// 构建目标语言的文章URL
+		return getPostUrl(slug, targetLang);
+	}
+
+	// 检测当前路径是否为archive页面
+	function isArchivePath(url: string): boolean {
+		const archivePathRegex = /^\/(\w+\/)?archive$/;
+		return archivePathRegex.test(url);
+	}
+
+	// 检测当前路径是否为about页面
+	function isAboutPath(url: string): boolean {
+		const aboutPathRegex = /^\/(\w+\/)?about$/;
+		return aboutPathRegex.test(url);
+	}
+
+	// 检测当前路径是否为首页
+	function isHomePath(url: string): boolean {
+		const homePathRegex = /^\/(\w+\/?)?$/;
+		return homePathRegex.test(url);
+	}
+
+	// 获取archive页面的语言切换URL
+	function getArchiveUrlWithLang(targetLang: string): string {
+		if (isDefaultLanguage(targetLang)) {
+			return "/archive";
+		}
+		return `/${targetLang}/archive`;
+	}
+
+	// 获取about页面的语言切换URL
+	function getAboutUrlWithLang(targetLang: string): string {
+		if (isDefaultLanguage(targetLang)) {
+			return "/about";
+		}
+		return `/${targetLang}/about`;
+	}
+
+	// 获取首页的语言切换URL
+	function getHomeUrlWithLang(targetLang: string): string {
+		if (isDefaultLanguage(targetLang)) {
+			return "/";
+		}
+		return `/${targetLang}`;
+	}
+
+	// 获取通用页面的语言切换URL（确保不添加非法斜杠）
+	function getUniversalLanguageSwitchUrl(currentUrl: string, targetLang: string): string {
+		const currentLang = extractLangFromUrl(currentUrl);
+		
+		// 移除当前语言前缀，获取纯净的路径
+		let cleanUrl = currentUrl;
+		if (!isDefaultLanguage(currentLang)) {
+			cleanUrl = currentUrl.replace(new RegExp(`^\/${currentLang}(?:\/|$)`), "/");
+		}
+		
+		// 移除末尾的斜杠（如果存在且不是根路径）
+		if (cleanUrl !== "/" && cleanUrl.endsWith("/")) {
+			cleanUrl = cleanUrl.slice(0, -1);
+		}
+		
+		// 检查不同页面类型并生成相应的URL
+		if (isPostsPath(cleanUrl)) {
+			return getPostsSameLangTextUrl(currentUrl, targetLang);
+		} else if (isArchivePath(cleanUrl)) {
+			return getArchiveUrlWithLang(targetLang);
+		} else if (isAboutPath(cleanUrl)) {
+			return getAboutUrlWithLang(targetLang);
+		} else if (isHomePath(cleanUrl)) {
+			return getHomeUrlWithLang(targetLang);
+		} else {
+			// 对于其他页面，使用现有的语言切换逻辑
+			if (isDefaultLanguage(targetLang)) {
+				return cleanUrl;
+			} else {
+				return `/${targetLang}${cleanUrl}`;
+			}
+		}
+	}
+
+	// 安全的URL路径处理函数，确保不添加非法的尾随斜杠
+	function sanitizeUrlPath(path: string): string {
+		// 移除多余的斜杠
+		path = path.replace(/\/+/g, "/");
+		
+		// 如果不是根路径，移除尾随斜杠
+		if (path !== "/" && path.endsWith("/")) {
+			path = path.slice(0, -1);
+		}
+		
+		// 确保路径以斜杠开头
+		if (!path.startsWith("/")) {
+			path = "/" + path;
+		}
+		
+		return path;
+	}
+
 	// Cookie 工具函数
 	function setCookie(name: string, value: string, days: number = 365) {
 		const expires = new Date();
@@ -312,71 +506,33 @@ const shouldShowLangSwitcher =
 		if (langLink) {
 			e.preventDefault();
 			
-			const href = langLink.getAttribute('href');
+			// 在点击事件处理前保存原始路径
+			const originalPath = window.location.pathname;
 			const selectedLang = langLink.getAttribute('data-lang-switch');
 			
-			if (href && selectedLang) {
+			if (selectedLang) {
 				// 保存语言偏好到cookie
 				setCookie('preferred-language', selectedLang);
 				
 				// 触发语言变化事件
 				window.dispatchEvent(new CustomEvent('languageChanged', { detail: { lang: selectedLang } }));
 				
-				// 检查目标URL是否存在
-				async function checkUrlExists(url: string): Promise<boolean> {
-					try {
-						const response = await fetch(url, { method: 'HEAD' });
-						return response.ok;
-					} catch {
-						return false;
-					}
-				}
-				
-				// 获取回退URL的函数
-				function getFallbackUrl(targetLang: string, currentUrl: string): string {
-				if (currentUrl.includes('/posts/')) {
-					return targetLang === 'zh_cn' ? '/archive' : `/${targetLang}/archive`;
-				} else if (currentUrl.includes('/archive/category/') || currentUrl.includes('/archive/tag/')) {
-					return targetLang === 'zh_cn' ? '/archive' : `/${targetLang}/archive`;
-				} else if (currentUrl.includes('/about')) {
-					return targetLang === 'zh_cn' ? '/about' : `/${targetLang}/about`;
-				} else if (currentUrl.includes('/archive')) {
-					return targetLang === 'zh_cn' ? '/archive' : `/${targetLang}/archive`;
-				} else {
-					return targetLang === 'zh_cn' ? '/' : `/${targetLang}`;
-				}
-			}
-				
-				// 获取当前页面路径
-				const currentPath = window.location.pathname;
-				
-				// 动态生成目标URL，而不是使用预生成的href
-				let targetUrl = href;
-				
-				// 对于特殊页面，直接生成正确的目标URL
-				if (currentPath.includes('/about')) {
-					targetUrl = selectedLang === 'zh_cn' ? '/about' : `/${selectedLang}/about`;
-				} else if (currentPath.includes('/archive')) {
-					targetUrl = selectedLang === 'zh_cn' ? '/archive' : `/${selectedLang}/archive`;
-				}
-				
-				const urlExists = await checkUrlExists(targetUrl);
-				
-				if (urlExists) {
-					// 目标页面存在，使用Swup导航避免页面重载
+				// 使用新的动态语言切换函数
+				try {
+					const targetUrl = await switchLanguageWithFallback(selectedLang, originalPath);
+					
+					// 使用Swup导航避免页面重载
 					if (window.swup) {
 						window.swup.navigate(targetUrl);
 					} else {
-						// 降级方案：如果Swup不可用，使用传统跳转
 						window.location.replace(targetUrl);
 					}
-				} else {
-					// 目标页面不存在，使用回退URL
-					const fallbackUrl = getFallbackUrl(selectedLang, currentPath);
+				} catch (error) {
+					// 降级方案：直接跳转到首页
+					const fallbackUrl = selectedLang === 'zh_cn' ? '/' : `/${selectedLang}`;
 					if (window.swup) {
 						window.swup.navigate(fallbackUrl);
 					} else {
-						// 降级方案：如果Swup不可用，使用传统跳转
 						window.location.replace(fallbackUrl);
 					}
 				}

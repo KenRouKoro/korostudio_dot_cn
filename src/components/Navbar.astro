@@ -124,7 +124,7 @@ function updateNavbarText(lang: string) {
                 if (lang === 'zh_cn') {
                     (link as HTMLAnchorElement).href = '/';
                 } else {
-                    (link as HTMLAnchorElement).href = `/${lang}/`;
+                    (link as HTMLAnchorElement).href = `/${lang}`;
                 }
             } else if (currentText === '关于' || currentText === 'About' || currentText === 'について' || currentText === 'О нас') {
                 textElement.firstChild.textContent = currentTranslations['about'];
